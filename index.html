@@ -254,22 +254,22 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 PHP-FPM Worker Calculator</h1>
-            <p>Optimal Worker Count Calculator Based on Server Resources</p>
+            <h1>🚀 PHP-FPM 프로세스 계산기</h1>
+            <p>php-fpm 안정적인운영을 위한 값 계산</p>
         </div>
         
         <div class="content">
             <div id="calculatorForm">
                 <div class="input-group">
-                    <label for="serverMemory">Server Total Memory (GB)</label>
+                    <label for="serverMemory">시스템 전체 총 메모리 (GB)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="serverMemory" placeholder="e.g. 16" required>
+                        <input type="number" id="serverMemory" value="16" placeholder="e.g. 16" required>
                         <span class="unit">GB</span>
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label for="phpMaxMemory">Usage of PHP Process (MB)</label>
+                    <label for="phpMaxMemory">PHP 프로세스에서 사용하는 최대 메모리 (MB)</label>
                     <div class="input-wrapper">
                         <input type="number" id="phpMaxMemory" placeholder="e.g. 128" required>
                         <span class="unit">MB</span>
@@ -277,7 +277,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="avgProcessTime">Average Process Time (ms)</label>
+                    <label for="avgProcessTime">PHP 프로세스의 평균 처리 시간 (ms)</label>
                     <div class="input-wrapper">
                         <input type="number" id="avgProcessTime" placeholder="e.g. 200" required>
                         <span class="unit">ms</span>
@@ -306,11 +306,11 @@
                 <div class="result-grid">
                     <div class="result-card">
                         <div class="result-value" id="workerCount">0</div>
-                        <div class="result-label">Recommended Workers</div>
+                        <div class="result-label">추천 프로세스 숫자(pm.max_children)</div>
                     </div>
                     <div class="result-card">
                         <div class="result-value" id="maxRps">0</div>
-                        <div class="result-label">Max Request Per Second</div>
+                        <div class="result-label">최대 RPS</div>
                     </div>
                     <div class="result-card">
                         <div class="result-value" id="reservedPercent">0%</div>
