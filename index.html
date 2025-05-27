@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP-FPM Worker Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .unit {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 30px 0;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .result-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .memory-info {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #28a745;
+            margin-bottom: 20px;
+        }
+
+        .memory-info h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .memory-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .memory-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(21, 87, 36, 0.1);
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #856404;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 1px solid #dc3545;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #721c24;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PHP-FPM Worker Calculator</h1>
+            <p>Optimal Worker Count Calculator Based on Server Resources</p>
+        </div>
+        
+        <div class="content">
+            <div id="calculatorForm">
+                <div class="input-group">
+                    <label for="serverMemory">Server Total Memory (GB)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="serverMemory" placeholder="e.g. 16" required>
+                        <span class="unit">GB</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="phpMaxMemory">Usage of PHP Process (MB)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="phpMaxMemory" placeholder="e.g. 128" required>
+                        <span class="unit">MB</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="avgProcessTime">Average Process Time (ms)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="avgProcessTime" placeholder="e.g. 200" required>
+                        <span class="unit">ms</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="systemReserved">System Reserved (%)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="systemReserved" value="30" min="5" max="50" required>
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+
+                <button type="button" class="calculate-btn" onclick="calculateWorkers()">
+                    Calculate
+                </button>
+
+                <div id="errorMessage" class="error-message">
+                    <strong>⚠️ Input Error</strong>
+                    <span id="errorText">Please enter all values correctly.</span>
+                </div>
+            </div>
+
+            <div id="results" class="results">
+                <div class="result-grid">
+                    <div class="result-card">
+                        <div class="result-value" id="workerCount">0</div>
+                        <div class="result-label">Recommended Workers</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="maxRps">0</div>
+                        <div class="result-label">Max Request Per Second</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="reservedPercent">0%</div>
+                        <div class="result-label">System Reserved</div>
+                    </div>
+                </div>
+
+                <div class="memory-info">
+                    <h3>📊 Memory Usage Analysis</h3>
+                    <div class="memory-breakdown">
+                        <div class="memory-item">
+                            <span>Total Server Memory:</span>
+                            <strong id="totalMemory">0 GB</strong>
+                        </div>
+                        <div class="memory-item">
+                            <span>System Reserved Memory:</span>
+                            <strong id="reservedMemory">0 GB</strong>
+                        </div>
+                        <div class="memory-item">
+                            <span>PHP Available Memory:</span>
+                            <strong id="availableMemory">0 GB</strong>
+                        </div>
+                        <div class="memory-item">
+                            <span>Memory per Process:</span>
+                            <strong id="perProcessMemory">0 MB</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="warnings"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enter 키로도 계산 가능하도록 설정
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    calculateWorkers();
+                }
+            });
+        });
+
+        function calculateWorkers() {
+            const serverMemoryGB = parseInt(document.getElementById('serverMemory').value);
+            const phpMaxMemory = parseInt(document.getElementById('phpMaxMemory').value);
+            const avgProcessTime = parseInt(document.getElementById('avgProcessTime').value);
+            const systemReservedPercent = parseInt(document.getElementById('systemReserved').value);
+
+            // Hide error message
+            hideError();
+
+            // Input validation
+            if (!serverMemoryGB || !phpMaxMemory || !avgProcessTime || !systemReservedPercent) {
+                showError('Please enter all values.');
+                return;
+            }
+
+            if (serverMemoryGB <= 0 || phpMaxMemory <= 0 || avgProcessTime <= 0) {
+                showError('All values must be positive numbers greater than 0.');
+                return;
+            }
+
+            if (systemReservedPercent < 5 || systemReservedPercent > 50) {
+                showError('System reserved percentage must be between 5% and 50%.');
+                return;
+            }
+
+            // Convert GB to MB for calculation
+            const serverMemory = serverMemoryGB * 1024;
+
+            if (phpMaxMemory >= serverMemory) {
+                showError('PHP process memory cannot be larger than total server memory.');
+                return;
+            }
+
+            // Calculate reservation based on user input
+            const reservedMemory = Math.floor(serverMemory * (systemReservedPercent / 100));
+
+            // Calculate available memory
+            const availableMemory = serverMemory - reservedMemory;
+            
+            // Calculate worker count (with 10% safety margin)
+            const workerCount = Math.floor((availableMemory * 0.9) / phpMaxMemory);
+            
+            if (workerCount <= 0) {
+                showError('Calculated worker count is 0 or less. Please reduce PHP memory usage, increase server memory, or lower system reserved percentage.');
+                return;
+            }
+            
+            // Calculate RPS (1 second = 1000ms)
+            const maxRps = Math.floor((workerCount * 1000) / avgProcessTime);
+
+            // Display results
+            document.getElementById('workerCount').textContent = workerCount;
+            document.getElementById('maxRps').textContent = maxRps.toLocaleString();
+            document.getElementById('reservedPercent').textContent = systemReservedPercent + '%';
+            
+            document.getElementById('totalMemory').textContent = serverMemoryGB + ' GB';
+            document.getElementById('reservedMemory').textContent = (reservedMemory / 1024).toFixed(1) + ' GB';
+            document.getElementById('availableMemory').textContent = (availableMemory / 1024).toFixed(1) + ' GB';
+            document.getElementById('perProcessMemory').textContent = phpMaxMemory + ' MB';
+
+            // Display warnings
+            displayWarnings(serverMemory, phpMaxMemory, workerCount, avgProcessTime, systemReservedPercent);
+
+            // Show results section
+            document.getElementById('results').classList.add('show');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('show');
+            
+            // 3초 후 자동으로 숨기기
+            setTimeout(() => {
+                hideError();
+            }, 5000);
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
+        }
+
+        function displayWarnings(serverMemory, phpMaxMemory, workerCount, avgProcessTime, systemReservedPercent) {
+            const warningsDiv = document.getElementById('warnings');
+            let warnings = [];
+
+            // Too few workers
+            if (workerCount < 5) {
+                warnings.push('⚠️ Worker count is too low. Consider reducing PHP memory usage, increasing server memory, or lowering system reserved percentage.');
+            }
+
+            // Too many workers (warning when exceeding 64)
+            if (workerCount > 64) {
+                warnings.push('⚠️ Worker count is very high. Please check if it\'s appropriate compared to CPU core count.');
+            }
+
+            // High memory usage per process (warning when exceeding 512MB)
+            if (phpMaxMemory > 512) {
+                warnings.push('⚠️ Memory usage per process is high. Consider optimizing PHP configuration.');
+            }
+
+            // Long average processing time (warning when exceeding 1 second)
+            if (avgProcessTime > 1000) {
+                warnings.push('⚠️ Average processing time exceeds 1 second. Application performance optimization may be needed.');
+            }
+
+            // System reserved percentage warnings
+            if (systemReservedPercent < 10) {
+                warnings.push('⚠️ System reserved percentage is very low. Ensure sufficient memory for OS and other processes.');
+            } else if (systemReservedPercent > 40) {
+                warnings.push('⚠️ System reserved percentage is high. You might be able to use more memory for PHP processes.');
+            }
+
+            // Display warning messages
+            if (warnings.length > 0) {
+                warningsDiv.innerHTML = `
+                    <div class="warning">
+                        <strong>Notes:</strong>
+                        ${warnings.map(warning => `<div style="margin-bottom: 5px;">${warning}</div>`).join('')}
+                    </div>
+                `;
+            } else {
+                warningsDiv.innerHTML = '';
+            }
+        }
+
+        // 입력 필드에 실시간 유효성 검사
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value < 0) {
+                    this.value = 0;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
