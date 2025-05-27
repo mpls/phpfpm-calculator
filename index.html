@@ -1,4 +1,25 @@
-<!DOCTYPE html>
+@media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .help-content {
+                width: 280px;
+                margin-left: -140px;
+            }
+        }<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -232,36 +253,90 @@
             }
         }
 
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .result-grid {
-                grid-template-columns: 1fr;
-            }
+        .help-tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+            cursor: help;
+        }
+
+        .help-icon {
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .help-icon:hover {
+            background: #5a6fd8;
+            transform: scale(1.1);
+        }
+
+        .help-content {
+            visibility: hidden;
+            opacity: 0;
+            width: 350px;
+            background: #2c3e50;
+            color: white;
+            text-align: left;
+            border-radius: 12px;
+            padding: 15px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -175px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .help-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2c3e50 transparent transparent transparent;
+        }
+
+        .help-tooltip:hover .help-content {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .auto-calc-note {
+            background: linear-gradient(135deg, #e8f4f8, #d1ecf1);
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #0c5460;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 PHP-FPM 프로세스 계산기</h1>
-            <p>php-fpm 안정적인운영을 위한 값 계산</p>
+            <h1>🚀 PHP-FPM 워커 계산기</h1>
+            <p>서버 리소스 기반 최적 워커 수 계산</p>
         </div>
         
         <div class="content">
             <div id="calculatorForm">
                 <div class="input-group">
-                    <label for="serverMemory">시스템 전체 총 메모리 (GB)</label>
+                    <label for="serverMemory">서버 총 메모리 (GB)</label>
                     <div class="input-wrapper">
                         <input type="number" id="serverMemory" value="8" required>
                         <span class="unit">GB</span>
@@ -269,15 +344,15 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="phpMaxMemory">PHP 프로세스에서 사용하는 최대 메모리 (MB)</label>
+                    <label for="phpMaxMemory">PHP 프로세스 메모리 사용량 (MB)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="phpMaxMemory" value="256" required>
+                        <input type="number" id="phpMaxMemory" value="512" required>
                         <span class="unit">MB</span>
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label for="avgProcessTime">PHP 프로세스의 평균 처리 시간 (ms)</label>
+                    <label for="avgProcessTime">평균 요청 처리 시간 (ms)</label>
                     <div class="input-wrapper">
                         <input type="number" id="avgProcessTime" value="500" required>
                         <span class="unit">ms</span>
@@ -285,20 +360,37 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="systemReserved">시스템 예약 메모리 (%)</label>
+                    <label for="systemReserved">
+                        시스템 예약 메모리 (%)
+                        <div class="help-tooltip">
+                            <div class="help-icon">?</div>
+                            <div class="help-content">
+                                <strong>시스템 예약 메모리란?</strong><br/>
+                                서버에서 운영체제와 시스템 관리용으로 예약하는 메모리입니다.<br/><br/>
+                                <strong>권장 기준:</strong><br/>
+                                • 32GB 이하: 30% 예약<br/>
+                                • 32GB 초과: 15% 예약<br/><br/>
+                                메모리가 클수록 절대량으로는 충분하므로 비율을 낮춰도 됩니다.
+                            </div>
+                        </div>
+                    </label>
                     <div class="input-wrapper">
                         <input type="number" id="systemReserved" value="30" min="5" max="50" required>
                         <span class="unit">%</span>
                     </div>
                 </div>
 
+                <div class="auto-calc-note">
+                    💡 <strong>자동 권장 설정:</strong> 시스템 예약 메모리는 32GB 이하에서는 30%를 예약하고, 32GB를 넘어가면 15%를 예약합니다.
+                </div>
+
                 <button type="button" class="calculate-btn" onclick="calculateWorkers()">
-                    Calculate
+                    계산하기
                 </button>
 
                 <div id="errorMessage" class="error-message">
-                    <strong>⚠️ Input Error</strong>
-                    <span id="errorText">Please enter all values correctly.</span>
+                    <strong>⚠️ 입력 오류</strong>
+                    <span id="errorText">모든 값을 올바르게 입력해주세요.</span>
                 </div>
             </div>
 
@@ -306,23 +398,23 @@
                 <div class="result-grid">
                     <div class="result-card">
                         <div class="result-value" id="workerCount">0</div>
-                        <div class="result-label">추천 프로세스 숫자(pm.max_children)</div>
+                        <div class="result-label">추천 워커 수</div>
                     </div>
                     <div class="result-card">
                         <div class="result-value" id="maxRps">0</div>
-                        <div class="result-label">최대 RPS</div>
+                        <div class="result-label">최대 초당 요청 처리량</div>
                     </div>
                     <div class="result-card">
                         <div class="result-value" id="reservedPercent">0%</div>
-                        <div class="result-label">시스템 예약</div>
+                        <div class="result-label">시스템 예약 비율</div>
                     </div>
                 </div>
 
                 <div class="memory-info">
-                    <h3>📊 Memory Usage Analysis</h3>
+                    <h3>📊 메모리 사용량 분석</h3>
                     <div class="memory-breakdown">
                         <div class="memory-item">
-                            <span>시스템 전체 메모리:</span>
+                            <span>총 서버 메모리:</span>
                             <strong id="totalMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
@@ -330,7 +422,7 @@
                             <strong id="reservedMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
-                            <span>서비스에서 사용할수 있는 메모리:</span>
+                            <span>PHP 사용 가능 메모리:</span>
                             <strong id="availableMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
@@ -346,6 +438,21 @@
     </div>
 
     <script>
+        // 서버 메모리 입력 시 자동으로 시스템 예약 비율만 조정 (자동 계산은 안 함)
+        document.getElementById('serverMemory').addEventListener('input', function() {
+            const serverMemoryGB = parseInt(this.value);
+            const systemReservedInput = document.getElementById('systemReserved');
+            
+            if (serverMemoryGB) {
+                if (serverMemoryGB > 32) {
+                    systemReservedInput.value = 15;
+                } else {
+                    systemReservedInput.value = 30;
+                }
+                // 자동 계산 제거 - 버튼으로만 계산
+            }
+        });
+
         // Enter 키로도 계산 가능하도록 설정
         document.querySelectorAll('input[type="number"]').forEach(input => {
             input.addEventListener('keypress', function(e) {
@@ -355,7 +462,14 @@
             });
         });
 
+        // 페이지 로드 시 기본값으로 한번 계산
+        window.addEventListener('load', function() {
+            calculateWorkers();
+        });
+
         function calculateWorkers() {
+            console.log('계산 시작'); // 디버깅용
+            
             const serverMemoryGB = parseInt(document.getElementById('serverMemory').value);
             const phpMaxMemory = parseInt(document.getElementById('phpMaxMemory').value);
             const avgProcessTime = parseInt(document.getElementById('avgProcessTime').value);
@@ -366,17 +480,17 @@
 
             // Input validation
             if (!serverMemoryGB || !phpMaxMemory || !avgProcessTime || !systemReservedPercent) {
-                showError('Please enter all values.');
+                showError('모든 값을 입력해주세요.');
                 return;
             }
 
             if (serverMemoryGB <= 0 || phpMaxMemory <= 0 || avgProcessTime <= 0) {
-                showError('All values must be positive numbers greater than 0.');
+                showError('모든 값은 0보다 큰 양수여야 합니다.');
                 return;
             }
 
             if (systemReservedPercent < 5 || systemReservedPercent > 50) {
-                showError('System reserved percentage must be between 5% and 50%.');
+                showError('시스템 예약 비율은 5%와 50% 사이여야 합니다.');
                 return;
             }
 
@@ -384,7 +498,7 @@
             const serverMemory = serverMemoryGB * 1024;
 
             if (phpMaxMemory >= serverMemory) {
-                showError('PHP process memory cannot be larger than total server memory.');
+                showError('PHP 프로세스 메모리가 서버 총 메모리보다 클 수 없습니다.');
                 return;
             }
 
@@ -398,12 +512,23 @@
             const workerCount = Math.floor((availableMemory * 0.9) / phpMaxMemory);
             
             if (workerCount <= 0) {
-                showError('Calculated worker count is 0 or less. Please reduce PHP memory usage, increase server memory, or lower system reserved percentage.');
+                showError('계산된 워커 수가 0 이하입니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰주세요.');
                 return;
             }
             
             // Calculate RPS (1 second = 1000ms)
             const maxRps = Math.floor((workerCount * 1000) / avgProcessTime);
+
+            console.log('계산 결과:', {
+                serverMemoryGB,
+                phpMaxMemory,
+                avgProcessTime,
+                systemReservedPercent,
+                workerCount,
+                maxRps,
+                reservedMemory,
+                availableMemory
+            });
 
             // Display results
             document.getElementById('workerCount').textContent = workerCount;
@@ -415,11 +540,15 @@
             document.getElementById('availableMemory').textContent = (availableMemory / 1024).toFixed(1) + ' GB';
             document.getElementById('perProcessMemory').textContent = phpMaxMemory + ' MB';
 
+            console.log('DOM 업데이트 완료');
+
             // Display warnings
             displayWarnings(serverMemory, phpMaxMemory, workerCount, avgProcessTime, systemReservedPercent);
 
             // Show results section
             document.getElementById('results').classList.add('show');
+            
+            console.log('계산 완료'); // 디버깅용
         }
 
         function showError(message) {
@@ -445,36 +574,31 @@
 
             // Too few workers
             if (workerCount < 5) {
-                warnings.push('⚠️ Worker count is too low. Consider reducing PHP memory usage, increasing server memory, or lowering system reserved percentage.');
-            }
-
-            // Too many workers (warning when exceeding 64)
-            if (workerCount > 64) {
-                warnings.push('⚠️ Worker count is very high. Please check if it\'s appropriate compared to CPU core count.');
+                warnings.push('⚠️ 워커 수가 너무 적습니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰보세요.');
             }
 
             // High memory usage per process (warning when exceeding 512MB)
             if (phpMaxMemory > 512) {
-                warnings.push('⚠️ Memory usage per process is high. Consider optimizing PHP configuration.');
+                warnings.push('⚠️ 프로세스당 메모리 사용량이 높습니다. PHP 설정 최적화를 고려하세요.');
             }
 
             // Long average processing time (warning when exceeding 1 second)
             if (avgProcessTime > 1000) {
-                warnings.push('⚠️ Average processing time exceeds 1 second. Application performance optimization may be needed.');
+                warnings.push('⚠️ 평균 처리 시간이 1초를 초과합니다. 애플리케이션 성능 최적화가 필요할 수 있습니다.');
             }
 
             // System reserved percentage warnings
             if (systemReservedPercent < 10) {
-                warnings.push('⚠️ System reserved percentage is very low. Ensure sufficient memory for OS and other processes.');
+                warnings.push('⚠️ 시스템 예약 비율이 매우 낮습니다. OS 및 기타 프로세스용 메모리가 충분한지 확인하세요.');
             } else if (systemReservedPercent > 40) {
-                warnings.push('⚠️ System reserved percentage is high. You might be able to use more memory for PHP processes.');
+                warnings.push('⚠️ 시스템 예약 비율이 높습니다. PHP 프로세스에 더 많은 메모리를 사용할 수 있을 것 같습니다.');
             }
 
             // Display warning messages
             if (warnings.length > 0) {
                 warningsDiv.innerHTML = `
                     <div class="warning">
-                        <strong>Notes:</strong>
+                        <strong>주의사항:</strong>
                         ${warnings.map(warning => `<div style="margin-bottom: 5px;">${warning}</div>`).join('')}
                     </div>
                 `;
