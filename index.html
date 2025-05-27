@@ -263,7 +263,7 @@
                 <div class="input-group">
                     <label for="serverMemory">시스템 전체 총 메모리 (GB)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="serverMemory" value="16" placeholder="e.g. 16" required>
+                        <input type="number" id="serverMemory" value="8" placeholder="e.g. 8" required>
                         <span class="unit">GB</span>
                     </div>
                 </div>
@@ -271,7 +271,7 @@
                 <div class="input-group">
                     <label for="phpMaxMemory">PHP 프로세스에서 사용하는 최대 메모리 (MB)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="phpMaxMemory" placeholder="e.g. 128" required>
+                        <input type="number" id="phpMaxMemory" value="256" required>
                         <span class="unit">MB</span>
                     </div>
                 </div>
@@ -279,13 +279,13 @@
                 <div class="input-group">
                     <label for="avgProcessTime">PHP 프로세스의 평균 처리 시간 (ms)</label>
                     <div class="input-wrapper">
-                        <input type="number" id="avgProcessTime" placeholder="e.g. 200" required>
+                        <input type="number" id="avgProcessTime" value="500" required>
                         <span class="unit">ms</span>
                     </div>
                 </div>
 
                 <div class="input-group">
-                    <label for="systemReserved">System Reserved (%)</label>
+                    <label for="systemReserved">시스템 예약 메모리 (%)</label>
                     <div class="input-wrapper">
                         <input type="number" id="systemReserved" value="30" min="5" max="50" required>
                         <span class="unit">%</span>
@@ -314,7 +314,7 @@
                     </div>
                     <div class="result-card">
                         <div class="result-value" id="reservedPercent">0%</div>
-                        <div class="result-label">System Reserved</div>
+                        <div class="result-label">시스템 예약</div>
                     </div>
                 </div>
 
@@ -322,19 +322,19 @@
                     <h3>📊 Memory Usage Analysis</h3>
                     <div class="memory-breakdown">
                         <div class="memory-item">
-                            <span>Total Server Memory:</span>
+                            <span>시스템 전체 메모리:</span>
                             <strong id="totalMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
-                            <span>System Reserved Memory:</span>
+                            <span>시스템 예약 메모리:</span>
                             <strong id="reservedMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
-                            <span>PHP Available Memory:</span>
+                            <span>서비스에서 사용할수 있는 메모리:</span>
                             <strong id="availableMemory">0 GB</strong>
                         </div>
                         <div class="memory-item">
-                            <span>Memory per Process:</span>
+                            <span>프로세스당 메모리:</span>
                             <strong id="perProcessMemory">0 MB</strong>
                         </div>
                     </div>
