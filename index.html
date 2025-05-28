@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHP-FPM Worker Calculator</title>
+    <title>PHP-FPM Process Calculator</title>
     <style>
         * {
             margin: 0;
@@ -294,14 +294,32 @@
             opacity: 1;
         }
 
-        .auto-calc-note {
-            background: linear-gradient(135deg, #e8f4f8, #d1ecf1);
-            border-left: 4px solid #17a2b8;
+        .config-info {
+            background: linear-gradient(135deg, #e8e8ff, #d1d1f6);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #5c6bc0;
+            margin-bottom: 20px;
+        }
+
+        .config-info h3 {
+            color: #303f9f;
+            margin-bottom: 10px;
+        }
+
+        .config-info pre {
+            background: rgba(255, 255, 255, 0.7);
             padding: 15px;
-            margin: 20px 0;
             border-radius: 8px;
-            font-size: 0.9rem;
-            color: #0c5460;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        
+        .config-info pre span {
+            font-weight: bold;
+            color: #d32f2f;
         }
         
         /* 모바일 반응형 스타일 */
@@ -332,8 +350,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 PHP-FPM 워커 계산기</h1>
-            <p>서버 리소스 기반 최적 워커 수 계산</p>
+            <h1>🚀 PHP-FPM 프로세스 계산기</h1>
+            <p>서버 리소스 기반 최적 프로세스 수 계산</p>
         </div>
         
         <div class="content">
@@ -401,8 +419,23 @@
                 <div class="result-grid">
                     <div class="result-card">
                         <div class="result-value" id="workerCount">0</div>
-                        <div class="result-label">추천 워커 수 (pm.max_children) </div>
+                        <div class="result-label">추천 프로세스 수 (pm.max_children)</div>
                     </div>
+                    <div class="result-card">
+                        <div class="result-value" id="startServers">0</div>
+                        <div class="result-label">시작 프로세스 (pm.start_servers)</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="minSpareServers">0</div>
+                        <div class="result-label">최소 유휴 프로세스 (pm.min_spare_servers)</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="maxSpareServers">0</div>
+                        <div class="result-label">최대 유휴 프로세스 (pm.max_spare_servers)</div>
+                    </div>
+                </div>
+                
+                <div class="result-grid">
                     <div class="result-card">
                         <div class="result-value" id="maxRps">0</div>
                         <div class="result-label">최대 초당 요청 처리량</div>
@@ -433,6 +466,30 @@
                             <strong id="perProcessMemory">0 MB</strong>
                         </div>
                     </div>
+                </div>
+                
+                <div class="config-info">
+                    <h3>📋 PHP-FPM 설정 참고</h3>
+                    <pre id="configExample">
+[www]
+; 동적 프로세스 관리 모드
+pm = dynamic
+
+; 최대 프로세스 수
+pm.max_children = <span id="configMaxChildren">0</span>
+
+; 시작 시 생성할 프로세스 수
+pm.start_servers = <span id="configStartServers">0</span>
+
+; 최소 유휴 프로세스 수
+pm.min_spare_servers = <span id="configMinSpare">0</span>
+
+; 최대 유휴 프로세스 수
+pm.max_spare_servers = <span id="configMaxSpare">0</span>
+
+; 각 프로세스가 처리할 최대 요청 수 (메모리 누수 방지)
+pm.max_requests = 500
+                    </pre>
                 </div>
 
                 <div id="warnings"></div>
@@ -515,12 +572,17 @@
             const workerCount = Math.floor((availableMemory * 0.9) / phpMaxMemory);
             
             if (workerCount <= 0) {
-                showError('계산된 워커 수가 0 이하입니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰주세요.');
+                showError('계산된 프로세스 수가 0 이하입니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰주세요.');
                 return;
             }
             
             // Calculate RPS (1 second = 1000ms)
             const maxRps = Math.floor((workerCount * 1000) / avgProcessTime);
+
+            // Calculate start_servers, min_spare_servers, max_spare_servers
+            const startServers = Math.max(Math.floor(workerCount * 0.25), 2);
+            const minSpareServers = Math.max(Math.floor(workerCount * 0.1), 1);
+            const maxSpareServers = Math.min(Math.floor(workerCount * 0.75), workerCount - 1);
 
             console.log('계산 결과:', {
                 serverMemoryGB,
@@ -528,6 +590,9 @@
                 avgProcessTime,
                 systemReservedPercent,
                 workerCount,
+                startServers,
+                minSpareServers,
+                maxSpareServers,
                 maxRps,
                 reservedMemory,
                 availableMemory
@@ -535,6 +600,9 @@
 
             // Display results
             document.getElementById('workerCount').textContent = workerCount;
+            document.getElementById('startServers').textContent = startServers;
+            document.getElementById('minSpareServers').textContent = minSpareServers;
+            document.getElementById('maxSpareServers').textContent = maxSpareServers;
             document.getElementById('maxRps').textContent = maxRps.toLocaleString();
             document.getElementById('reservedPercent').textContent = systemReservedPercent + '%';
             
@@ -542,6 +610,12 @@
             document.getElementById('reservedMemory').textContent = (reservedMemory / 1024).toFixed(1) + ' GB';
             document.getElementById('availableMemory').textContent = (availableMemory / 1024).toFixed(1) + ' GB';
             document.getElementById('perProcessMemory').textContent = phpMaxMemory + ' MB';
+            
+            // Update config example
+            document.getElementById('configMaxChildren').textContent = workerCount;
+            document.getElementById('configStartServers').textContent = startServers;
+            document.getElementById('configMinSpare').textContent = minSpareServers;
+            document.getElementById('configMaxSpare').textContent = maxSpareServers;
 
             console.log('DOM 업데이트 완료');
 
@@ -577,7 +651,7 @@
 
             // Too few workers
             if (workerCount < 5) {
-                warnings.push('⚠️ 워커 수가 너무 적습니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰보세요.');
+                warnings.push('⚠️ 프로세스 수가 너무 적습니다. PHP 메모리 사용량을 줄이거나 서버 메모리를 늘리거나 시스템 예약 비율을 낮춰보세요.');
             }
 
             // High memory usage per process (warning when exceeding 512MB)
